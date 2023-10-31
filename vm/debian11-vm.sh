@@ -492,7 +492,7 @@ pve_check
 ssh_check
 start_script
 
-# Afficher un message indiquant que la validation du stockage est en cours
+# Afficher un message indiquant que la validation du stockage est en cours 
 msg_info "Validating Storage"
 
 # Boucle pour lire chaque ligne de la sortie de la commande pvesm status
