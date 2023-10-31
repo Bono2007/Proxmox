@@ -5,11 +5,11 @@ function header_info {
   
   # Affiche un logo ASCII Art entre les balises EOF
   cat <<"EOF"
-    ____       __    _                ______
-   / __ \___  / /_  (_)___ _____     <  /__ \
-  / / / / _ \/ __ \/ / __ `/ __ \    / /__/ /
- / /_/ /  __/ /_/ / / /_/ / / / /   / // __/
-/_____/\___/_.___/_/\__,_/_/ /_/   /_//____/
+    ____       __    _                ___ ___
+   / __ \___  / /_  (_)___ _____     <  /<_ /
+  / / / / _ \/ __ \/ / __ `/ __ \    / / / /
+ / /_/ /  __/ /_/ / / /_/ / / / /   / / / /
+/_____/\___/_.___/_/\__,_/_/ /_/   /_/ /_/
 EOF
 }
 
@@ -341,7 +341,7 @@ function advanced_settings() {
     # Quitter le script si l'utilisateur annule la sélection
     exit-script
   fi
-}
+
 
 
   if DISK_CACHE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "DISK CACHE" --radiolist "Choose" --cancel-button Exit-Script 10 58 2 \
