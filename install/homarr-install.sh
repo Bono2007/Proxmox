@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -25,52 +25,27 @@ msg_ok "Installed Dependencies"
 msg_info "Setting up Node.js Repository"
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" >/etc/apt/sources.list.d/nodesource.list
 msg_ok "Set up Node.js Repository"
 
-msg_info "Installing Node.js"
+msg_info "Installing Node.js/Yarn"
 $STD apt-get update
 $STD apt-get install -y nodejs
-$STD npm install next
-$STD npm instal react
-$STD npm instal react-dom
-msg_ok "Installed Node.js"
-
-msg_info "Installing Yarn"
+$STD npm install -g npm@latest
 $STD npm install -g yarn
-$STD yarn global add prisma
-msg_ok "Installed Yarn"
+msg_ok "Installed Node.js/Yarn"
 
 msg_info "Installing Homarr (Patience)"
-git clone -q https://github.com/ajnart/homarr.git /opt/homarr
+mkdir -p /opt/homarr
+RELEASE=$(curl -s https://api.github.com/repos/ajnart/homarr/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+wget -q -O- https://github.com/ajnart/homarr/archive/refs/tags/v${RELEASE}.tar.gz | $STD tar -xz -C /opt && mv /opt/homarr-${RELEASE}/* /opt/homarr
+rm -rf /opt/homarr-${RELEASE}
 cd /opt/homarr
-cat <<EOF >/opt/homarr/.env
-# Since the ".env" file is gitignored, you can use the ".env.example" file to
-# build a new ".env" file when you clone the repo. Keep this file up-to-date
-# when you add new variables to `.env`.
-
-# This file will be committed to version control, so make sure not to have any
-# secrets in it. If you are cloning this repo, create a copy of this file named
-# ".env" and populate it with your secrets.
-
-# When adding additional environment variables, the schema in "/src/env.js"
-# should be updated accordingly.
-
-# Prisma
-# https://www.prisma.io/docs/reference/database-reference/connection-urls#env
-DATABASE_URL="file:../database/db.sqlite"
-
-# Next Auth
-# You can generate a new secret on the command line with:
-# openssl rand -base64 32
-# https://next-auth.js.org/configuration/options#secret
-# NEXTAUTH_SECRET=""
-NEXTAUTH_URL="http://localhost:3000"
-
-NEXTAUTH_SECRET="1234"
-EOF
+wget -q -O /opt/homarr/.env https://raw.githubusercontent.com/ajnart/homarr/dev/.env.example
+sed -i 's|NEXTAUTH_SECRET="[^"]*"|NEXTAUTH_SECRET="'"$(openssl rand -base64 32)"'"|' /opt/homarr/.env
 $STD yarn install
 $STD yarn build
+$STD yarn db:migrate
 msg_ok "Installed Homarr"
 
 msg_info "Creating Service"

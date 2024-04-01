@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -39,6 +39,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -61,7 +63,6 @@ function update_script() {
     "1" "Update Core" ON \
     "2" "Install HACS" OFF \
     "3" "Install FileBrowser" OFF \
-    "4" "Install/Update AppDaemon" OFF \
     3>&1 1>&2 2>&3)
   header_info
   if [ "$UPD" == "1" ]; then
@@ -76,7 +77,7 @@ function update_script() {
       echo -e "${GN}Updating to Stable Version${CL}"
       BR=""
     fi
-    if [[ "$PY" == "python3.10" ]]; then echo -e "⚠️  Home Assistant now requires Python 3.11 to run."; fi
+    if [[ "$PY" == "python3.11" ]]; then echo -e "⚠️  Home Assistant will soon require Python 3.12."; fi
 
     msg_info "Stopping Home Assistant"
     systemctl stop homeassistant
@@ -96,22 +97,32 @@ function update_script() {
     exit
   fi
   if [ "$UPD" == "2" ]; then
-    msg_info "Installing Home Assistant Comunity Store (HACS)"
+    msg_info "Installing Home Assistant Community Store (HACS)"
     apt update &>/dev/null
     apt install unzip &>/dev/null
     cd .homeassistant
     bash <(curl -fsSL https://get.hacs.xyz) &>/dev/null
-    msg_ok "Installed Home Assistant Comunity Store (HACS)"
+    msg_ok "Installed Home Assistant Community Store (HACS)"
     echo -e "\n Reboot Home Assistant and clear browser cache then Add HACS integration.\n"
     exit
   fi
   if [ "$UPD" == "3" ]; then
+    set +Eeuo pipefail
+    read -r -p "Would you like to use No Authentication? <y/N> " prompt
     msg_info "Installing FileBrowser"
     RELEASE=$(curl -fsSL https://api.github.com/repos/filebrowser/filebrowser/releases/latest | grep -o '"tag_name": ".*"' | sed 's/"//g' | sed 's/tag_name: //g')
-    curl -fsSL https://github.com/filebrowser/filebrowser/releases/download/v2.23.0/linux-amd64-filebrowser.tar.gz | tar -xzv -C /usr/local/bin &>/dev/null
-    filebrowser config init -a '0.0.0.0' &>/dev/null
-    filebrowser config set -a '0.0.0.0' &>/dev/null
-    filebrowser users add admin changeme --perm.admin &>/dev/null
+    curl -fsSL https://github.com/filebrowser/filebrowser/releases/download/$RELEASE/linux-amd64-filebrowser.tar.gz | tar -xzv -C /usr/local/bin &>/dev/null
+
+    if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
+      filebrowser config init -a '0.0.0.0' &>/dev/null
+      filebrowser config set -a '0.0.0.0' &>/dev/null
+      filebrowser config set --auth.method=noauth &>/dev/null
+      filebrowser users add ID 1 --perm.admin &>/dev/null  
+    else
+      filebrowser config init -a '0.0.0.0' &>/dev/null
+      filebrowser config set -a '0.0.0.0' &>/dev/null
+      filebrowser users add admin changeme --perm.admin &>/dev/null
+    fi
     msg_ok "Installed FileBrowser"
 
     msg_info "Creating Service"
@@ -133,78 +144,6 @@ WantedBy=default.target" >$service_path
     echo -e "FileBrowser should be reachable by going to the following URL.
          ${BL}http://$IP:8080${CL}   admin|changeme\n"
     exit
-  fi
-  if [ "$UPD" == "4" ]; then
-    clear
-    header_info
-    if [[ ! -d /srv/appdaemon ]]; then
-      msg_info "Installing AppDaemon"
-      mkdir /srv/appdaemon
-      cd /srv/appdaemon
-      python3 -m venv .
-      source bin/activate
-      pip install appdaemon &>/dev/null
-      mkdir -p /root/.homeassistant/appdaemon/apps
-      cat >/root/.homeassistant/appdaemon/appdaemon.yaml <<EOF
-# Sample appdaemon.yml file
-# For configuration, please visit: https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html
-appdaemon:
-  time_zone: CET
-  latitude: 51.725
-  longitude: 14.3434
-  elevation: 0
-  plugins:
-    HASS:
-      type: hass
-      ha_url: <home_assistant_base_url>
-      token: <some_long_lived_access_token>
-http:
-    url: http://127.0.0.1:5050
-admin:
-api:
-EOF
-      msg_ok "Installed AppDaemon"
-
-      msg_info "Creating Service"
-      cat >/etc/systemd/system/appdaemon.service <<EOF
-[Unit]
-Description=AppDaemon
-After=homeassistant.service
-Requires=homeassistant.service
-[Service]
-Type=simple
-WorkingDirectory=/root/.homeassistant/appdaemon
-ExecStart=/srv/appdaemon/bin/appdaemon -c "/root/.homeassistant/appdaemon"
-RestartForceExitStatus=100
-[Install]
-WantedBy=multi-user.target
-EOF
-      systemctl enable --now appdaemon &>/dev/null
-      msg_ok "Created Service"
-
-      msg_ok "Completed Successfully!\n"
-      echo -e "AppDaemon should be reachable by going to the following URL.
-            ${BL}http://$IP:5050${CL}\n"
-      exit
-    else
-      msg_info "Upgrading AppDaemon"
-      msg_info "Stopping AppDaemon"
-      systemctl stop appdaemon
-      msg_ok "Stopped AppDaemon"
-
-      msg_info "Updating AppDaemon"
-      source /srv/appdaemon/bin/activate
-      pip install --upgrade appdaemon &>/dev/null
-      msg_ok "Updated AppDaemon"
-
-      msg_info "Starting AppDaemon"
-      systemctl start appdaemon
-      sleep 2
-      msg_ok "Started AppDaemon"
-      msg_ok "Update Successful"
-      echo -e "\n  Go to http://${IP}:5050 \n"
-      exit
-    fi
   fi
 }
 

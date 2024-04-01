@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -13,7 +13,7 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies, (Patience)"
+msg_info "Installing Dependencies (Patience)"
 $STD apt-get install -y \
   git \
   curl \
@@ -33,48 +33,40 @@ $STD apt-get install -y \
   liblapack-dev \
   dbus-broker \
   libpcap-dev \
+  libavdevice-dev \
+  libavformat-dev \
+  libavcodec-dev \
+  libavutil-dev \
+  libavfilter-dev \
   libmariadb-dev-compat \
   libatlas-base-dev
 msg_ok "Installed Dependencies"
 
-msg_info "Updating Python3"
+#RELEASE=$(curl -s https://www.python.org/downloads/ | grep -oP 'Download Python \K\d+\.\d+\.\d+' | head -1)
+
+msg_info "Compiling Python 3.12 from its source (Additional Patience)"
+$STD apt-get remove -y python3
 $STD apt-get install -y \
-  python3 \
-  python3-dev \
-  python3-pip \
-  python3-venv
+  checkinstall \
+  libreadline-dev \
+  libncursesw5-dev \
+  libssl-dev \
+  libsqlite3-dev \
+  tk-dev \
+  libgdbm-dev \
+  libc6-dev \
+  libbz2-dev
 
-msg_ok "Updated Python3"
-
-if [[ "$PCT_OSVERSION" == "11" ]]; then
-  msg_info "Installing pyenv"
-  $STD apt-get install -y \
-    make \
-    libreadline-dev \
-    libsqlite3-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    llvm \
-    libbz2-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    liblzma-dev
-  $STD git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-  set +e
-  echo 'export PYENV_ROOT="$HOME/.pyenv"' >>~/.bashrc
-  echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >>~/.bashrc
-  echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init --path)"\nfi' >>~/.bashrc
-  msg_ok "Installed pyenv"
-  . ~/.bashrc
-
-  set -e
-  msg_info "Installing Python 3.11.3 (Patience)"
-  $STD pyenv install 3.11.3
-  pyenv global 3.11.3
-  msg_ok "Installed Python 3.11.3"
-fi
+#wget -qO- https://www.python.org/ftp/python/${RELEASE}/Python-${RELEASE}.tar.xz | tar -xJ
+wget -qO- https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tar.xz | tar -xJ
+cd Python-3.12.2
+$STD ./configure --enable-optimizations
+$STD make -j $(nproc)
+$STD make altinstall
+$STD update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.12 1
+cd ~
+rm -rf Python-3.12.2
+msg_ok "Installed Python 3.12"
 
 msg_info "Installing Home Assistant-Core"
 mkdir /srv/homeassistant

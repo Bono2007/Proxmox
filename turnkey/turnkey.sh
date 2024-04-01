@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -15,7 +15,7 @@ function header_info {
 EOF
 }
 
-set -eEuo pipefail
+set -euo pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
@@ -66,6 +66,7 @@ while read -r TAG ITEM; do
 done < <(
   cat <<EOF
 ansible Ansible
+bookstack BookStack
 core Core
 faveo-helpdesk Faveo Helpdesk
 fileserver File Server
@@ -97,7 +98,6 @@ turnkey=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "TurnKey LXCs
 # Setup script environment
 PASS="$(openssl rand -base64 8)"
 CTID=$(pvesh get /cluster/nextid)
-TEMPLATE_SEARCH="debian-11-turnkey-${turnkey}"
 PCT_OPTIONS="
     -features keyctl=1,nesting=1
     -hostname turnkey-${turnkey}
@@ -175,8 +175,8 @@ msg "Updating LXC template list..."
 pveam update >/dev/null
 
 # Get LXC template string
-mapfile -t TEMPLATES < <(pveam available -section turnkeylinux | sed -n "s/.*\($TEMPLATE_SEARCH.*\)/\1/p" | sort -t - -k 2 -V)
-[ ${#TEMPLATES[@]} -gt 0 ] || die "Unable to find a template when searching for '$TEMPLATE_SEARCH'."
+mapfile -t TEMPLATES < <(pveam available -section turnkeylinux | awk -v turnkey="${turnkey}" '$0 ~ turnkey {print $2}' | sort -t - -k 2 -V)
+[ ${#TEMPLATES[@]} -gt 0 ] || die "Unable to find a template when searching for '${turnkey}'."
 TEMPLATE="${TEMPLATES[-1]}"
 
 # Download LXC template
@@ -204,7 +204,7 @@ pct start "$CTID"
 sleep 5
 
 # Get container IP
-set +e
+set +euo pipefail # Turn off error checking
 max_attempts=5
 attempt=1
 IP=""
@@ -224,7 +224,6 @@ if [[ -z $IP ]]; then
   IP="NOT FOUND"
 fi
 
-set -e
 # Start Proxmox VE Monitor-All if available
 if [[ -f /etc/systemd/system/ping-instances.service ]]; then
   systemctl start ping-instances.service

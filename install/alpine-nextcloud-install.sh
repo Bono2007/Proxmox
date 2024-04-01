@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -34,6 +34,8 @@ $STD apk add php82-pecl-smbclient
 $STD apk add php82-pecl-imagick
 $STD apk add php82-pecl-vips
 $STD apk add php82-exif
+$STD apk add php82-sodium
+$STD apk add php82-bz2
 $STD apk add redis
 msg_ok "Installed PHP/Redis"
 

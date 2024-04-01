@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -39,6 +39,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -65,6 +67,17 @@ function update_script() {
   wget https://github.com/zwave-js/zwave-js-ui/releases/download/${RELEASE}/zwave-js-ui-${RELEASE}-linux.zip &>/dev/null
   unzip zwave-js-ui-${RELEASE}-linux.zip &>/dev/null
   \cp -R zwave-js-ui-linux /opt/zwave-js-ui
+  service_path="/etc/systemd/system/zwave-js-ui.service"
+  echo "[Unit]
+  Description=zwave-js-ui
+  Wants=network-online.target
+  After=network-online.target
+  [Service]
+  User=root
+  WorkingDirectory=/opt/zwave-js-ui
+  ExecStart=/opt/zwave-js-ui/zwave-js-ui-linux
+  [Install]
+  WantedBy=multi-user.target" >$service_path
   msg_ok "Updated Z-wave JS UI"
 
   msg_info "Starting Z-wave JS UI"

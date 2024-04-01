@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -39,6 +39,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -53,17 +55,26 @@ function default_settings() {
 function update_script() {
 header_info
 if [[ ! -d /opt/homepage ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-msg_info "Updating ${APP}"
-if ! command -v pnpm >/dev/null 2>&1; then
-    npm install -g pnpm &>/dev/null
-fi
-cd /opt/homepage
+  if [[ "$(node -v | cut -d 'v' -f 2)" == "18."* ]]; then
+    if ! command -v npm >/dev/null 2>&1; then
+      echo "Installing NPM..."
+      apt-get install -y npm >/dev/null 2>&1
+      echo "Installed NPM..."
+    fi
+  fi
+RELEASE=$(curl -s https://api.github.com/repos/gethomepage/homepage/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
+msg_info "Updating Homepage to v${RELEASE} (Patience)"
 systemctl stop homepage
-git pull --force &>/dev/null
-pnpm install &>/dev/null
-pnpm build &>/dev/null
+wget -q https://github.com/gethomepage/homepage/archive/refs/tags/v${RELEASE}.tar.gz
+tar -xzf v${RELEASE}.tar.gz
+cp -r homepage-${RELEASE}/* /opt/homepage/
+rm -rf homepage-${RELEASE}
+cd /opt/homepage
+npx update-browserslist-db@latest
+pnpm install
+pnpm build
 systemctl start homepage
-msg_ok "Updated Successfully"
+msg_ok "Updated Homepage to v${RELEASE}"
 exit
 }
 

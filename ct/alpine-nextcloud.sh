@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -21,9 +21,9 @@ echo -e "Loading..."
 APP="Alpine-Nextcloud"
 var_disk="2"
 var_cpu="2"
-var_ram="512"
+var_ram="1024"
 var_os="alpine"
-var_version="3.18"
+var_version="3.19"
 variables
 color
 catch_errors
@@ -39,6 +39,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -74,6 +76,12 @@ function update_script() {
     case $CHOICE in
     1)
       apk update && apk upgrade
+      if ! apk -e info php82-sodium >/dev/null 2>&1; then
+        apk add -q php82-sodium
+      fi
+      if ! apk -e info php82-bz2 >/dev/null 2>&1; then
+        apk add -q php82-bz2
+      fi
       su nextcloud -s /bin/sh -c 'php82 /usr/share/webapps/nextcloud/occ upgrade'
       su nextcloud -s /bin/sh -c 'php82 /usr/share/webapps/nextcloud/occ db:add-missing-indices'
       exit

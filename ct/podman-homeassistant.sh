@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -27,7 +27,7 @@ var_disk="16"
 var_cpu="2"
 var_ram="2048"
 var_os="debian"
-var_version="11"
+var_version="12"
 variables
 color
 catch_errors
@@ -43,6 +43,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -74,7 +76,7 @@ if [ "$UPD" == "1" ]; then
   for container in ${CONTAINER_LIST}; do
     CONTAINER_IMAGE="$(podman inspect --format "{{.Config.Image}}" --type container ${container})"
     RUNNING_IMAGE="$(podman inspect --format "{{.Image}}" --type container "${container}")"
-    podman pull "docker.io/${CONTAINER_IMAGE}"
+    podman pull "${CONTAINER_IMAGE}"
     LATEST_IMAGE="$(podman inspect --format "{{.Id}}" --type image "${CONTAINER_IMAGE}")"
     if [[ "${RUNNING_IMAGE}" != "${LATEST_IMAGE}" ]]; then
       echo "Updating ${container} image ${CONTAINER_IMAGE}"
@@ -85,12 +87,12 @@ if [ "$UPD" == "1" ]; then
   exit
 fi
 if [ "$UPD" == "2" ]; then
-  msg_info "Installing Home Assistant Comunity Store (HACS)"
+  msg_info "Installing Home Assistant Community Store (HACS)"
   apt update &>/dev/null
   apt install unzip &>/dev/null
   cd /var/lib/containers/storage/volumes/hass_config/_data
   bash <(curl -fsSL https://get.hacs.xyz) &>/dev/null
-  msg_ok "Installed Home Assistant Comunity Store (HACS)"
+  msg_ok "Installed Home Assistant Community Store (HACS)"
   echo -e "\n Reboot Home Assistant and clear browser cache then Add HACS integration.\n"
   exit
 fi

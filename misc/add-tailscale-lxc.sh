@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
 
 function header_info {
+clear
 cat <<"EOF"
-  ______      _ __                __        
- /_  __/___ _(_) /_____________ _/ /__      
-  / / / __ `/ / / ___/ ___/ __ `/ / _ \     
- / / / /_/ / / (__  ) /__/ /_/ / /  __/     
-/_/  \__,_/_/_/____/\___/\__,_/_/\___/      
-                                            
+  ______      _ __                __
+ /_  __/___ _(_) /_____________ _/ /__
+  / / / __ `/ / / ___/ ___/ __ `/ / _ \
+ / / / /_/ / / (__  ) /__/ /_/ / /  __/
+/_/  \__,_/_/_/____/\___/\__,_/_/\___/
+
 EOF
 }
-clear
 header_info
+set -e
 while true; do
   read -p "This will add Tailscale to an existing LXC Container ONLY. Proceed(y/n)?" yn
   case $yn in
@@ -25,29 +26,15 @@ while true; do
   *) echo "Please answer yes or no." ;;
   esac
 done
-
-set -o errexit
-set -o errtrace
-set -o nounset
-set -o pipefail
-shopt -s expand_aliases
-alias die='EXIT=$? LINE=$LINENO error_exit'
-trap die ERR
-
-function error_exit() {
-  trap - ERR
-  local reason="Unknown failure occured."
-  local msg="${1:-$reason}"
-  local flag="\e[1;31m‼ ERROR\e[0m $EXIT@$LINE"
-  echo -e "$flag $msg" 1>&2
-  exit $EXIT
-}
+header_info
+echo "Loading..."
 function msg() {
   local TEXT="$1"
   echo -e "$TEXT"
 }
 
 NODE=$(hostname)
+MSG_MAX_LENGTH=0
 while read -r line; do
   TAG=$(echo "$line" | awk '{print $1}')
   ITEM=$(echo "$line" | awk '{print substr($0,36)}')
@@ -70,7 +57,7 @@ cat <<EOF >>$CTID_CONFIG_PATH
 lxc.cgroup2.devices.allow: c 10:200 rwm
 lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
 EOF
-
+header_info
 msg "Installing Tailscale..."
 lxc-attach -n $CTID -- bash -c "$(curl -fsSL https://tailscale.com/install.sh)" &>/dev/null || exit
 msg "Installed Tailscale"

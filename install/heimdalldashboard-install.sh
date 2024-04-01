@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -17,24 +17,21 @@ msg_info "Installing Dependencies"
 $STD apt-get install -y curl
 $STD apt-get install -y sudo
 $STD apt-get install -y mc
+$STD apt-get install -y apt-transport-https
+$STD apt-get install -y composer
+$STD apt-get install -y php8.2-{bz2,curl,sqlite3,zip,xml}
 msg_ok "Installed Dependencies"
-
-msg_info "Installing PHP"
-$STD apt-get install -y php
-$STD apt-get install -y php-sqlite3
-$STD apt-get install -y php-zip
-$STD apt-get install -y php-xml
-msg_ok "Installed PHP"
 
 RELEASE=$(curl -sX GET "https://api.github.com/repos/linuxserver/Heimdall/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]')
 msg_info "Installing Heimdall Dashboard ${RELEASE}"
-$STD curl --silent -o ${RELEASE}.tar.gz -L "https://github.com/linuxserver/Heimdall/archive/${RELEASE}.tar.gz"
-$STD tar xvzf ${RELEASE}.tar.gz
-VER=$(curl -s https://api.github.com/repos/linuxserver/Heimdall/releases/latest |
-  grep "tag_name" |
-  awk '{print substr($2, 3, length($2)-4) }')
+wget -q https://github.com/linuxserver/Heimdall/archive/${RELEASE}.tar.gz
+tar xzf ${RELEASE}.tar.gz
+VER=$(curl -s https://api.github.com/repos/linuxserver/Heimdall/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 rm -rf ${RELEASE}.tar.gz
 mv Heimdall-${VER} /opt/Heimdall
+cd /opt/Heimdall
+cp .env.example .env
+$STD php artisan key:generate
 msg_ok "Installed Heimdall Dashboard ${RELEASE}"
 
 msg_info "Creating Service"
@@ -54,7 +51,10 @@ TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target" >$service_path
-$STD sudo systemctl enable --now heimdall.service
+systemctl enable -q --now heimdall.service
+cd /opt/Heimdall
+COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload &>/dev/null
+systemctl restart heimdall.service
 msg_ok "Created Service"
 
 motd_ssh

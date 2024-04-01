@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -40,6 +40,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -56,6 +58,13 @@ function update_script() {
   if [[ ! -d /opt/zigbee2mqtt ]]; then
     msg_error "No ${APP} Installation Found!"
     exit
+  fi
+  if [[ "$(node -v | cut -d 'v' -f 2)" == "18."* ]]; then
+    if ! command -v npm >/dev/null 2>&1; then
+      echo "Installing NPM..."
+      apt-get install -y npm >/dev/null 2>&1
+      echo "Installed NPM..."
+    fi
   fi
   cd /opt/zigbee2mqtt
 
@@ -94,7 +103,13 @@ function update_script() {
     exit 1
   }
 
-  echo "Initiating update"
+  echo "Checking if any changes were made to package-lock.json..."
+  git checkout package-lock.json || {
+    echo "Failed to check package-lock.json."
+    exit 1
+  }
+
+  echo "Initiating update..."
   if ! git pull; then
     echo "Update failed, temporarily storing changes and trying again."
     git stash && git pull || (
@@ -106,6 +121,12 @@ function update_script() {
   echo "Acquiring necessary components..."
   npm ci || {
     echo "Failed to install necessary components."
+    exit 1
+  }
+
+  echo "Building..."
+  npm run build || {
+    echo "Failed to build new version."
     exit 1
   }
 

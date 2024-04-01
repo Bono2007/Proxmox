@@ -1,4 +1,9 @@
-<h1><p align="center"> User Submitted Guides </a></p></h1>
+<div align="center">
+  <a href="#">
+    <img src="https://raw.githubusercontent.com/tteck/Proxmox/main/misc/images/logo.png" height="100px" />
+ </a>
+</div>
+<h2 align="center">User Submitted Guides </h2>
 
 <sub> In order to contribute a guide on installing with Proxmox VE Helper Scripts, you should open a pull request that adds the guide to the `USER_SUBMITTED_GUIDES.md` file. </sub>
 
@@ -10,7 +15,7 @@
 
 [Home Assistant: Installing InfluxDB (LXC)](https://www.derekseaman.com/2023/04/home-assistant-installing-influxdb-lxc.html)
 
-[Home Assistant: Proxmox Quick Start Guide](https://www.derekseaman.com/2023/04/installing-home-assistant-on-proxmox-quick-start-guide.html)
+[Home Assistant: Proxmox Quick Start Guide](https://www.derekseaman.com/2023/10/home-assistant-proxmox-ve-8-0-quick-start-guide-2.html)
 
 [Home Assistant: Installing Grafana (LXC) with Let’s Encrypt SSL](https://www.derekseaman.com/2023/04/home-assistant-installing-grafana-lxc.html)
 
@@ -25,3 +30,9 @@
 [Moving Home Assistant’s Database To MariaDB On Proxmox](https://smarthomescene.com/guides/moving-home-assistants-database-to-mariadb-on-proxmox/)
 
 [How-to: Proxmox VE 7.4 to 8.0 Upgrade](https://www.derekseaman.com/2023/06/how-to-proxmox-7-4-to-8-0-upgrade.html)
+
+[iGPU Transcoding In Proxmox with Jellyfin](https://www.youtube.com/watch?v=XAa_qpNmzZs)
+
+[Proxmox + NetData](<https://dbt3ch.com/books/proxmox-netdata-for-better-insights-and-notifications/page/proxmox-netdata-for-better-insights-and-notifications>)
+
+[Proxmox Homelab Series](<https://blog.kye.dev/proxmox-series>)

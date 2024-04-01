@@ -17,7 +17,6 @@ color() {
 
 verb_ip6() {
   if [ "$VERBOSE" = "yes" ]; then
-    set -x
     STD=""
   else STD="silent"; fi
   silent() { "$@" >/dev/null 2>&1; }
@@ -72,11 +71,6 @@ setting_up_container() {
     echo -e " 🖧  Check Network Settings"
     exit 1
   fi
-  cat <<EOF >/etc/apk/repositories
-https://dl-cdn.alpinelinux.org/alpine/edge/main
-https://dl-cdn.alpinelinux.org/alpine/edge/community
-https://dl-cdn.alpinelinux.org/alpine/edge/testing
-EOF
   msg_ok "Set up Container OS"
   msg_ok "Network Connected: ${BL}$(ip addr show | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | tail -n1)${CL}"
 }

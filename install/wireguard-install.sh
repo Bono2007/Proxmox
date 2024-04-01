@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -22,11 +22,11 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing WireGuard (using pivpn.io)"
 OPTIONS_PATH='/options.conf'
-cat >$OPTIONS_PATH <<'EOF'
+cat >$OPTIONS_PATH <<EOF
 IPv4dev=eth0
 install_user=root
 VPN=wireguard
-pivpnNET=10.6.0.0
+pivpnNET=$(printf "10.%d.%d.0" $((RANDOM % 256)) $((RANDOM % 256)))
 subnetClass=24
 ALLOWED_IPS="0.0.0.0/0, ::0/0"
 pivpnMTU=1420

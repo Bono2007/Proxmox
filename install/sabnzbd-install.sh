@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -19,9 +19,10 @@ $STD apt-get install -y sudo
 $STD apt-get install -y mc
 $STD apt-get install -y par2
 $STD apt-get install -y p7zip-full
-wget -q http://http.us.debian.org/debian/pool/non-free/u/unrar-nonfree/unrar_7.0.2-1_amd64.deb
-$STD dpkg -i unrar_7.0.2-1_amd64.deb
-rm unrar_7.0.2-1_amd64.deb
+RELEASE=$(curl -s http://http.us.debian.org/debian/pool/non-free/u/unrar-nonfree/ | grep -oP 'href="\K[^"]*unrar_7\.\d+\.\d+-\d+_amd64\.deb' | head -1)
+wget -q http://http.us.debian.org/debian/pool/non-free/u/unrar-nonfree/$RELEASE
+$STD dpkg -i unrar*.deb
+rm unrar*.deb
 msg_ok "Installed Dependencies"
 
 msg_info "Updating Python3"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -40,6 +40,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -74,14 +76,13 @@ function update_script() {
     msg_ok "Stopped Paperless-ngx"
 
     msg_info "Updating to ${RELEASE}"
+    cd ~
     if [ "$(dpkg -l | awk '/libmariadb-dev-compat/ {print }' | wc -l)" != 1 ]; then apt-get install -y libmariadb-dev-compat; fi &>/dev/null
     wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$RELEASE/paperless-ngx-$RELEASE.tar.xz &>/dev/null
     tar -xf paperless-ngx-$RELEASE.tar.xz &>/dev/null
     cp -r /opt/paperless/paperless.conf paperless-ngx/
     cp -r paperless-ngx/* /opt/paperless/
     cd /opt/paperless
-    sed -i 's/scipy==1.8.1/scipy==1.10.1/g' requirements.txt
-    sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://github.com/paperless-ngx/django-q.git|' /opt/paperless/requirements.txt
     pip install -r requirements.txt &>/dev/null
     cd /opt/paperless/src
     /usr/bin/python3 manage.py migrate &>/dev/null

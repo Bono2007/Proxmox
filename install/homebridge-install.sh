@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -29,7 +29,7 @@ msg_ok "Set up Homebridge Repository"
 msg_info "Installing Homebridge"
 $STD apt update
 $STD apt-get install -y homebridge
-msg_info "Installed Homebridge"
+msg_ok "Installed Homebridge"
 
 motd_ssh
 customize

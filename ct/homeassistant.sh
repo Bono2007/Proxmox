@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build.func)
-# Copyright (c) 2021-2023 tteck
+# Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
@@ -39,6 +39,8 @@ function default_settings() {
   BRG="vmbr0"
   NET="dhcp"
   GATE=""
+  APT_CACHER=""
+  APT_CACHER_IP=""
   DISABLEIP6="no"
   MTU=""
   SD=""
@@ -46,7 +48,6 @@ function default_settings() {
   MAC=""
   VLAN=""
   SSH="no"
-  FUSE="no"
   VERB="no"
   echo_default
 }
@@ -88,12 +89,12 @@ function update_script() {
     exit
   fi
   if [ "$UPD" == "3" ]; then
-    msg_info "Installing Home Assistant Comunity Store (HACS)"
+    msg_info "Installing Home Assistant Community Store (HACS)"
     apt update &>/dev/null
     apt install unzip &>/dev/null
     cd /var/lib/docker/volumes/hass_config/_data
     bash <(curl -fsSL https://get.hacs.xyz) &>/dev/null
-    msg_ok "Installed Home Assistant Comunity Store (HACS)"
+    msg_ok "Installed Home Assistant Community Store (HACS)"
     echo -e "\n Reboot Home Assistant and clear browser cache then Add HACS integration.\n"
     exit
   fi
@@ -137,4 +138,4 @@ msg_ok "Completed Successfully!\n"
 echo -e "${APP} should be reachable by going to the following URL.
          ${BL}http://${IP}:8123${CL}
 Portainer should be reachable by going to the following URL.
-         ${BL}http://${IP}:9000${CL}\n"
+         ${BL}https://${IP}:9443${CL}\n"
