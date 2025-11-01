@@ -13,15 +13,6 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Python3"
-$STD apt-get install -y --no-install-recommends \
-  python3 \
-  python3-pip \
-  python3-dev \
-  python3-setuptools \
-  python3-wheel
-msg_ok "Installed Python3"
-
 msg_info "Installing Dependencies (Patience)"
 $STD apt-get install -y --no-install-recommends \
   redis \
@@ -49,10 +40,18 @@ $STD apt-get install -y --no-install-recommends \
   mc
 msg_ok "Installed Dependencies"
 
+msg_info "Installing Python3 Dependencies (Patience)"
+$STD apt-get install -y --no-install-recommends \
+  python3 \
+  python3-pip \
+  python3-dev \
+  python3-setuptools \
+  python3-wheel
+msg_ok "Installed Python3 Dependencies"
+
 msg_info "Installing OCR Dependencies (Patience)"
 $STD apt-get install -y --no-install-recommends \
   unpaper \
-  ghostscript \
   icc-profiles-free \
   qpdf \
   liblept5 \
@@ -61,10 +60,18 @@ $STD apt-get install -y --no-install-recommends \
   zlib1g \
   tesseract-ocr \
   tesseract-ocr-eng
+  
+cd /tmp
+wget -q https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10040/ghostscript-10.04.0.tar.gz
+$STD tar -xzf ghostscript-10.04.0.tar.gz
+cd ghostscript-10.04.0
+$STD ./configure
+$STD make
+$STD sudo make install
 msg_ok "Installed OCR Dependencies"
 
 msg_info "Installing JBIG2"
-$STD git clone https://github.com/agl/jbig2enc /opt/jbig2enc
+$STD git clone https://github.com/ie13/jbig2enc /opt/jbig2enc
 cd /opt/jbig2enc
 $STD bash ./autogen.sh
 $STD bash ./configure
@@ -90,6 +97,7 @@ sed -i -e "s|#PAPERLESS_CONSUMPTION_DIR=../consume|PAPERLESS_CONSUMPTION_DIR=/op
 sed -i -e "s|#PAPERLESS_DATA_DIR=../data|PAPERLESS_DATA_DIR=/opt/paperless/data|" /opt/paperless/paperless.conf
 sed -i -e "s|#PAPERLESS_MEDIA_ROOT=../media|PAPERLESS_MEDIA_ROOT=/opt/paperless/media|" /opt/paperless/paperless.conf
 sed -i -e "s|#PAPERLESS_STATICDIR=../static|PAPERLESS_STATICDIR=/opt/paperless/static|" /opt/paperless/paperless.conf
+echo "${Paperlessngx}" >/opt/${APPLICATION}_version.txt
 msg_ok "Installed Paperless-ngx"
 
 msg_info "Installing Natural Language Toolkit (Patience)"
@@ -97,13 +105,15 @@ $STD python3 -m nltk.downloader -d /usr/share/nltk_data all
 msg_ok "Installed Natural Language Toolkit"
 
 msg_info "Setting up PostgreSQL database"
-export LC_ALL=C.UTF-8
 DB_NAME=paperlessdb
 DB_USER=paperless
 DB_PASS="$(openssl rand -base64 18 | cut -c1-13)"
 SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
 $STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
-$STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER TEMPLATE template0;"
+$STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
+$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET client_encoding TO 'utf8';"
+$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';"
+$STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET timezone TO 'UTC'"
 echo "" >>~/paperless.creds
 echo -e "Paperless-ngx Database User: \e[32m$DB_USER\e[0m" >>~/paperless.creds
 echo -e "Paperless-ngx Database Password: \e[32m$DB_PASS\e[0m" >>~/paperless.creds
@@ -169,6 +179,7 @@ cat <<EOF >/etc/systemd/system/paperless-task-queue.service
 [Unit]
 Description=Paperless Celery Workers
 Requires=redis.service
+After=postgresql.service
 
 [Service]
 WorkingDirectory=/opt/paperless/src
@@ -217,6 +228,7 @@ customize
 
 msg_info "Cleaning up"
 rm -rf /opt/paperless/docker
-$STD apt-get autoremove
-$STD apt-get autoclean
+rm -rf /tmp/ghostscript*
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

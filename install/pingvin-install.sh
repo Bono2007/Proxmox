@@ -43,16 +43,20 @@ $STD npm install
 $STD npm run build
 $STD pm2 start --name="pingvin-share-backend" npm -- run prod
 cd ../frontend
+sed -i '/"admin.config.smtp.allow-unauthorized-certificates":\|admin.config.smtp.allow-unauthorized-certificates.description":/,+1d' ./src/i18n/translations/fr-FR.ts
 $STD npm install
 $STD npm run build
 $STD pm2 start --name="pingvin-share-frontend" npm -- run start
-$STD pm2 startup
+# create and enable pm2-root systemd script
+$STD pm2 startup systemd 
+# save running pm2 processes so pingvin-share can survive reboots
+$STD pm2 save
 msg_ok "Installed Pingvin Share"
 
 motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

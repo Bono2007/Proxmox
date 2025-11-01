@@ -22,8 +22,8 @@ APP="Home Assistant-Core"
 var_disk="8"
 var_cpu="2"
 var_ram="1024"
-var_os="debian"
-var_version="12"
+var_os="ubuntu"
+var_version="24.04"
 variables
 color
 catch_errors
@@ -85,7 +85,7 @@ function update_script() {
 
     msg_info "Updating Home Assistant"
     source /srv/homeassistant/bin/activate
-    pip install ${BR}--upgrade homeassistant &>/dev/null
+    uv pip install ${BR}--upgrade homeassistant &>/dev/null
     msg_ok "Updated Home Assistant"
 
     msg_info "Starting Home Assistant"
@@ -121,7 +121,7 @@ function update_script() {
     else
       filebrowser config init -a '0.0.0.0' &>/dev/null
       filebrowser config set -a '0.0.0.0' &>/dev/null
-      filebrowser users add admin changeme --perm.admin &>/dev/null
+      filebrowser users add admin helper-scripts.com --perm.admin &>/dev/null
     fi
     msg_ok "Installed FileBrowser"
 
@@ -142,7 +142,7 @@ WantedBy=default.target" >$service_path
 
     msg_ok "Completed Successfully!\n"
     echo -e "FileBrowser should be reachable by going to the following URL.
-         ${BL}http://$IP:8080${CL}   admin|changeme\n"
+         ${BL}http://$IP:8080${CL}   admin|helper-scripts.com\n"
     exit
   fi
 }

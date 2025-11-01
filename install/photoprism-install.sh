@@ -26,6 +26,7 @@ $STD apt-get install -y libtiff-dev
 $STD apt-get install -y imagemagick
 $STD apt-get install -y darktable
 $STD apt-get install -y rawtherapee
+$STD apt-get install -y libvips42
 
 echo 'export PATH=/usr/local:$PATH' >>~/.bashrc
 export PATH=/usr/local:$PATH
@@ -42,7 +43,7 @@ fi
 ldconfig
 cat <<EOF >/opt/photoprism/config/.env
 PHOTOPRISM_AUTH_MODE='password'
-PHOTOPRISM_ADMIN_PASSWORD='changeme'
+PHOTOPRISM_ADMIN_PASSWORD='helper-scripts.com'
 PHOTOPRISM_HTTP_HOST='0.0.0.0'
 PHOTOPRISM_HTTP_PORT='2342'
 PHOTOPRISM_SITE_CAPTION='https://tteck.github.io/Proxmox/'
@@ -50,6 +51,7 @@ PHOTOPRISM_STORAGE_PATH='/opt/photoprism/storage'
 PHOTOPRISM_ORIGINALS_PATH='/opt/photoprism/photos/originals'
 PHOTOPRISM_IMPORT_PATH='/opt/photoprism/photos/import'
 EOF
+ln -sf /opt/photoprism/bin/photoprism /usr/local/bin/photoprism
 msg_ok "Installed PhotoPrism"
 
 msg_info "Creating Service"
@@ -76,6 +78,6 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

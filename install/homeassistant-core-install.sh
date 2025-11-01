@@ -14,72 +14,24 @@ network_check
 update_os
 
 msg_info "Installing Dependencies (Patience)"
-$STD apt-get install -y \
-  git \
-  curl \
-  sudo \
-  mc \
-  bluez \
-  libffi-dev \
-  libssl-dev \
-  libjpeg-dev \
-  zlib1g-dev \
-  autoconf \
-  build-essential \
-  libopenjp2-7 \
-  libturbojpeg0-dev \
-  ffmpeg \
-  liblapack3 \
-  liblapack-dev \
-  dbus-broker \
-  libpcap-dev \
-  libavdevice-dev \
-  libavformat-dev \
-  libavcodec-dev \
-  libavutil-dev \
-  libavfilter-dev \
-  libmariadb-dev-compat \
-  libatlas-base-dev
+$STD apt-get install -y git curl sudo mc bluez libffi-dev libssl-dev libjpeg-dev zlib1g-dev autoconf build-essential libopenjp2-7 libturbojpeg0-dev ffmpeg liblapack3 liblapack-dev dbus-broker libpcap-dev libavdevice-dev libavformat-dev libavcodec-dev libavutil-dev libavfilter-dev libmariadb-dev-compat libatlas-base-dev pip python3.12-dev
 msg_ok "Installed Dependencies"
 
-#RELEASE=$(curl -s https://www.python.org/downloads/ | grep -oP 'Download Python \K\d+\.\d+\.\d+' | head -1)
+msg_info "Installing UV"
+$STD pip install uv
+msg_ok "Installed UV"
 
-msg_info "Compiling Python 3.12 from its source (Additional Patience)"
-$STD apt-get remove -y python3
-$STD apt-get install -y \
-  checkinstall \
-  libreadline-dev \
-  libncursesw5-dev \
-  libssl-dev \
-  libsqlite3-dev \
-  tk-dev \
-  libgdbm-dev \
-  libc6-dev \
-  libbz2-dev
-
-#wget -qO- https://www.python.org/ftp/python/${RELEASE}/Python-${RELEASE}.tar.xz | tar -xJ
-wget -qO- https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tar.xz | tar -xJ
-cd Python-3.12.2
-$STD ./configure --enable-optimizations
-$STD make -j $(nproc)
-$STD make altinstall
-$STD update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.12 1
-cd ~
-rm -rf Python-3.12.2
-msg_ok "Installed Python 3.12"
-
-msg_info "Installing Home Assistant-Core"
+msg_info "Setting up Home Assistant-Core environment"
 mkdir /srv/homeassistant
 cd /srv/homeassistant
-python3 -m venv .
+uv venv . &>/dev/null
 source bin/activate
-$STD pip install --upgrade pip
-$STD python3 -m pip install wheel
-$STD pip install homeassistant
-$STD pip install mysqlclient
-$STD pip install psycopg2-binary
+msg_ok "Created virtual environment with UV"
+
+msg_info "Installing Home Assistant-Core and packages"
+$STD uv pip install webrtcvad wheel homeassistant mysqlclient psycopg2-binary isal
 mkdir -p /root/.homeassistant
-msg_ok "Installed Home Assistant-Core"
+msg_ok "Installed Home Assistant-Core and required packages"
 
 msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/homeassistant.service
@@ -89,19 +41,20 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/root/.homeassistant
-ExecStart=/srv/homeassistant/bin/hass -c "/root/.homeassistant"
+Environment="PATH=/srv/homeassistant/bin:/usr/local/bin:/usr/bin:/usr/local/bin/uv"
+ExecStart=/srv/homeassistant/bin/python3 -m homeassistant --config /root/.homeassistant
 Restart=always
 RestartForceExitStatus=100
 [Install]
 WantedBy=multi-user.target
 EOF
-$STD systemctl enable --now homeassistant
+systemctl enable -q --now homeassistant
 msg_ok "Created Service"
 
 motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

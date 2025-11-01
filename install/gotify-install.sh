@@ -27,7 +27,10 @@ wget -q https://github.com/gotify/server/releases/download/v${RELEASE}/gotify-li
 $STD unzip gotify-linux-amd64.zip
 rm -rf gotify-linux-amd64.zip
 chmod +x gotify-linux-amd64
+echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
+msg_ok "Installed Gotify"
 
+msg_info "Creating Service"
 cat <<EOF >/etc/systemd/system/gotify.service
 [Unit]
 Description=Gotify
@@ -46,12 +49,12 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 systemctl enable -q --now gotify
-msg_ok "Installed Gotify"
+msg_ok "Created Service"
 
 motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

@@ -49,7 +49,10 @@ msg_ok "Installed PHP Dependencies"
 msg_info "Installing Python Dependencies"
 $STD apt-get -y install \
   python3-pip \
-  python3-requests
+  python3-requests \
+  python3-tz \
+  python3-tzlocal
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 $STD pip3 install mac-vendor-lookup
 $STD pip3 install fritzconnection
 $STD pip3 install cryptography
@@ -96,6 +99,6 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

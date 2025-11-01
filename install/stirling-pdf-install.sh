@@ -28,7 +28,8 @@ $STD apt-get install -y \
   make \
   g++ \
   unpaper \
-  ocrmypdf
+  ocrmypdf \
+  poppler-utils
 msg_ok "Installed Dependencies"
 
 msg_info "Installing LibreOffice Components"
@@ -42,6 +43,7 @@ msg_info "Installing Python Dependencies"
 $STD apt-get install -y \
   python3 \
   python3-pip
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 $STD pip3 install \
   uno \
   opencv-python-headless \
@@ -115,6 +117,6 @@ customize
 
 msg_info "Cleaning up"
 rm -rf v$RELEASE.tar.gz /zulu-repo_1.0.0-3_all.deb
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

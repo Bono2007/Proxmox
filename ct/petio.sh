@@ -8,22 +8,22 @@ source <(curl -s https://raw.githubusercontent.com/tteck/Proxmox/main/misc/build
 function header_info {
 clear
 cat <<"EOF"
-    __   ____          __ __      __                         __           
-   / /__/ __ \_____   / //_/_  __/ /_  ___  _________  ___  / /____  _____
-  / //_/ / / / ___/  / ,< / / / / __ \/ _ \/ ___/ __ \/ _ \/ __/ _ \/ ___/
- / ,< / /_/ (__  )  / /| / /_/ / /_/ /  __/ /  / / / /  __/ /_/  __(__  ) 
-/_/|_|\____/____/  /_/ |_\__,_/_.___/\___/_/  /_/ /_/\___/\__/\___/____/  
-                                                                          
+    ____       __  _     
+   / __ \___  / /_(_)___ 
+  / /_/ / _ \/ __/ / __ \
+ / ____/  __/ /_/ / /_/ /
+/_/    \___/\__/_/\____/ 
+
 EOF
 }
 header_info
 echo -e "Loading..."
-APP="k0s"
+APP="Petio"
 var_disk="4"
 var_cpu="2"
-var_ram="2048"
-var_os="debian"
-var_version="11"
+var_ram="1024"
+var_os="ubuntu"
+var_version="20.04"
 variables
 color
 catch_errors
@@ -54,11 +54,13 @@ function default_settings() {
 
 function update_script() {
 header_info
-if [[ ! -f /etc/k0s/k0s.yaml ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-msg_info "Updating ${APP} LXC"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
-msg_ok "Updated Successfully"
+if [[ ! -d /opt/Petio ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
+msg_info "Updating $APP"
+systemctl stop petio.service
+wget https://petio.tv/releases/latest -O petio-latest.zip
+unzip petio-latest.zip -d /opt/Petio
+systemctl start petio.service
+msg_ok "Updated $APP"
 exit
 }
 
@@ -67,3 +69,5 @@ build_container
 description
 
 msg_ok "Completed Successfully!\n"
+echo -e "${APP} should be reachable by going to the following URL.
+         ${BL}http://${IP}:7777${CL} \n"

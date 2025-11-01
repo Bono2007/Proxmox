@@ -21,7 +21,7 @@ echo -e "Loading..."
 APP="Vaultwarden"
 var_disk="6"
 var_cpu="4"
-var_ram="4096"
+var_ram="5120"
 var_os="debian"
 var_version="12"
 variables
@@ -57,6 +57,7 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+ 
   VAULT=$(curl -s https://api.github.com/repos/dani-garcia/vaultwarden/releases/latest |
     grep "tag_name" |
     awk '{print substr($2, 2, length($2)-3) }')
@@ -72,7 +73,7 @@ function update_script() {
 
   header_info
   if [ "$UPD" == "1" ]; then
-    echo -e "\n ⚠️  Ensure you set 4vCPU & 4096MiB RAM minimum!!! \n"
+    whiptail --backtitle "Proxmox VE Helper Scripts" --msgbox --title "SET RESOURCES" "Please set the resources in your ${APP} LXC to ${var_cpu}vCPU and ${var_ram}RAM for the build process before continuing" 10 75
     msg_info "Stopping Vaultwarden"
     systemctl stop vaultwarden.service
     msg_ok "Stopped Vaultwarden"
@@ -128,6 +129,9 @@ function update_script() {
       if ! command -v argon2 >/dev/null 2>&1; then apt-get install -y argon2 &>/dev/null; fi
       TOKEN=$(echo -n ${NEWTOKEN} | argon2 "$(openssl rand -base64 32)" -t 2 -m 16 -p 4 -l 64 -e)
       sed -i "s|ADMIN_TOKEN=.*|ADMIN_TOKEN='${TOKEN}'|" /opt/vaultwarden/.env
+      if [[ -f /opt/vaultwarden/data/config.json ]]; then
+        sed -i "s|\"admin_token\":.*|\"admin_token\": \"${TOKEN}\"|" /opt/vaultwarden/data/config.json
+      fi
       systemctl restart vaultwarden
     fi
     exit

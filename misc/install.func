@@ -12,7 +12,7 @@ color() {
   CM="${GN}✓${CL}"
   CROSS="${RD}✗${CL}"
   BFR="\\r\\033[K"
-  HOLD="-"
+  HOLD=" "
 }
 
 # This function enables IPv6 if it's not disabled and sets verbose mode if the global variable is set to "yes"
@@ -49,13 +49,13 @@ error_handler() {
 
 # This function displays a spinner.
 spinner() {
-  printf "\e[?25l"
-  spinner="/-\\|/-\\|"
-  spin_i=0
-  while true; do
-    printf "\b%s" "${spinner:spin_i++%${#spinner}:1}"
-    sleep 0.1
-  done
+    local chars="/-\|"
+    local spin_i=0
+    printf "\e[?25l"
+    while true; do
+        printf "\r \e[36m%s\e[0m" "${chars:spin_i++%${#chars}:1}"
+        sleep 0.1
+    done
 }
 
 # This function displays an informational message with a yellow color.
@@ -87,7 +87,10 @@ msg_error() {
 setting_up_container() {
   msg_info "Setting up Container OS"
   sed -i "/$LANG/ s/\(^# \)//" /etc/locale.gen
+  locale_line=$(grep -v '^#' /etc/locale.gen | grep -E '^[a-zA-Z]' | awk '{print $1}' | head -n 1)
+  echo "LANG=${locale_line}" >/etc/default/locale
   locale-gen >/dev/null
+  export LANG=${locale_line}
   echo $tz >/etc/timezone
   ln -sf /usr/share/zoneinfo/$tz /etc/localtime
   for ((i = RETRY_NUM; i > 0; i--)); do
@@ -114,7 +117,7 @@ network_check() {
   trap - ERR
   ipv4_connected=false
   ipv6_connected=false
-
+  sleep 1
 # Check IPv4 connectivity
   if ping -c 1 -W 1 1.1.1.1 &>/dev/null; then 
     msg_ok "IPv4 Internet Connected";
@@ -165,13 +168,14 @@ EOF
   fi
   $STD apt-get update
   $STD apt-get -o Dpkg::Options::="--force-confold" -y dist-upgrade
+  rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
   msg_ok "Updated Container OS"
 }
 
 # This function modifies the message of the day (motd) and SSH settings
 motd_ssh() {
   echo "export TERM='xterm-256color'" >>/root/.bashrc
-  echo -e "$APPLICATION LXC provided by https://tteck.github.io/Proxmox/\n" >/etc/motd
+  echo -e "$APPLICATION LXC provided by https://helper-scripts.com/\n" >/etc/motd
   chmod -x /etc/update-motd.d/*
   if [[ "${SSH_ROOT}" == "yes" ]]; then
     sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/g" /etc/ssh/sshd_config

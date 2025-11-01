@@ -21,7 +21,7 @@ header_info
 echo -e "Loading..."
 APP="Nginx Proxy Manager"
 var_disk="4"
-var_cpu="1"
+var_cpu="2"
 var_ram="1024"
 var_os="debian"
 var_version="12"
@@ -59,8 +59,10 @@ function update_script() {
     msg_error "No ${APP} Installation Found!"
     exit
   fi
+  whiptail --backtitle "Proxmox VE Helper Scripts" --msgbox --title "SET RESOURCES" "Please set the resources in your ${APP} LXC to ${var_cpu}vCPU and ${var_ram}RAM for the build process before continuing" 10 75
   if ! command -v pnpm &> /dev/null; then  
     msg_info "Installing pnpm"
+    #export NODE_OPTIONS=--openssl-legacy-provider
     npm install -g pnpm@8.15 &>/dev/null
     msg_ok "Installed pnpm"
   fi
@@ -167,6 +169,7 @@ EOF
 
   msg_info "Starting Services"
   sed -i 's/user npm/user root/g; s/^pid/#pid/g' /usr/local/openresty/nginx/conf/nginx.conf
+  sed -i 's/su npm npm/su root root/g' /etc/logrotate.d/nginx-proxy-manager
   sed -i 's/include-system-site-packages = false/include-system-site-packages = true/g' /opt/certbot/pyvenv.cfg
   systemctl enable -q --now openresty
   systemctl enable -q --now npm
@@ -184,6 +187,9 @@ start
 build_container
 description
 
+msg_info "Setting Container to Normal Resources"
+pct set $CTID -cores 1
+msg_ok "Set Container to Normal Resources"
 msg_ok "Completed Successfully!\n"
 echo -e "${APP} should be reachable by going to the following URL.
          ${BL}http://${IP}:81${CL}\n"

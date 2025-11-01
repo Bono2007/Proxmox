@@ -65,6 +65,7 @@ function msg_ok() {
 
 read -r -p "Would you like to use No Authentication? <y/N> " prompt
 msg_info "Installing ${APP}"
+apt-get install -y curl &>/dev/null
 RELEASE=$(curl -fsSL https://api.github.com/repos/filebrowser/filebrowser/releases/latest | grep -o '"tag_name": ".*"' | sed 's/"//g' | sed 's/tag_name: //g')
 curl -fsSL https://github.com/filebrowser/filebrowser/releases/download/$RELEASE/linux-amd64-filebrowser.tar.gz | tar -xzv -C /usr/local/bin &>/dev/null
 
@@ -77,7 +78,7 @@ if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
 else
   filebrowser config init -a '0.0.0.0' &>/dev/null
   filebrowser config set -a '0.0.0.0' &>/dev/null
-  filebrowser users add admin changeme --perm.admin &>/dev/null
+  filebrowser users add admin helper-scripts.com --perm.admin &>/dev/null
 fi
 msg_ok "Installed ${APP} on $hostname"
 

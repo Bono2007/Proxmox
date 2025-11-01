@@ -30,12 +30,14 @@ $STD apt-get install -y \
   python3-venv
 
 $STD apt-get install -y python3-setuptools
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Updated Python3"
 
 msg_info "Creating user octoprint"
 useradd -m -s /bin/bash -p $(openssl passwd -1 octoprint) octoprint
 usermod -aG sudo,tty,dialout octoprint
 chown -R octoprint:octoprint /opt
+echo "octoprint ALL=NOPASSWD: $(command -v systemctl) restart octoprint, $(command -v reboot), $(command -v poweroff)" > /etc/sudoers.d/octoprint
 msg_ok "Created user octoprint"
 
 msg_info "Installing OctoPrint"
@@ -74,6 +76,6 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

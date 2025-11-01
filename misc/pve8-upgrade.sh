@@ -73,7 +73,7 @@ EOF
   whiptail --backtitle "Proxmox VE Helper Scripts" --msgbox --title "PVE8 CEPH PACKAGE REPOSITORIES" "The 'Ceph Package Repositories' provides access to both the 'no-subscription' and 'enterprise' repositories." 10 58
     msg_info "Enabling 'ceph package repositories'"
     cat <<EOF >/etc/apt/sources.list.d/ceph.list
-# deb http://download.proxmox.com/debian/ceph-quincy bookworm enterprise
+# deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise
 deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription
 EOF
     msg_ok "Enabled 'ceph package repositories'"
@@ -124,10 +124,10 @@ if ! command -v pveversion >/dev/null 2>&1; then
   exit
 fi
 
-if ! pveversion | grep -Eq "pve-manager/(7\.4-(13|14|15|16|17))"; then
+if ! pveversion | grep -Eq "pve-manager/(7\.4-(16|17|18|19))"; then
   header_info
   msg_error "This version of Proxmox Virtual Environment is not supported"
-  echo -e "  PVE Version 7.4-13 or higher is required."
+  echo -e "  PVE Version 7.4-16 or higher is required."
   echo -e "\nExiting..."
   sleep 3
   exit

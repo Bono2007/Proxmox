@@ -52,6 +52,7 @@ $STD apt-get install -y \
   python3 \
   python3-dev \
   python3-pip
+rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Updated Python3"
 
 msg_info "Setting up Node.js Repository"
@@ -73,9 +74,11 @@ msg_ok "Installed Change Detection"
 msg_info "Installing Browserless & Playwright"
 mkdir /opt/browserless
 $STD python3 -m pip install playwright
-$STD git clone -b v1 https://github.com/browserless/chrome /opt/browserless
+$STD git clone https://github.com/browserless/chrome /opt/browserless
 $STD npm install --prefix /opt/browserless
+$STD /opt/browserless/node_modules/playwright-core/cli.js install --with-deps chrome chromium firefox webkit
 $STD npm run build --prefix /opt/browserless
+$STD npm run build:function --prefix /opt/browserless
 $STD npm prune production --prefix /opt/browserless
 msg_ok "Installed Browserless & Playwright"
 
@@ -122,8 +125,8 @@ Wants=browserless.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/changedetection
-Environment="WEBDRIVER_URL=http://127.0.0.1:4444/wd/hub"
-Environment="PLAYWRIGHT_DRIVER_URL=ws://127.0.0.1:3000/?stealth=1&--disable-web-security=true"
+Environment=WEBDRIVER_URL=http://127.0.0.1:4444/wd/hub
+Environment=PLAYWRIGHT_DRIVER_URL=ws://localhost:3000/chrome?launch={"defaultViewport":{"height":720,"width":1280},"headless":false,"stealth":true}&blockAds=true
 ExecStart=changedetection.io -d /opt/changedetection -p 5000
 [Install]
 WantedBy=multi-user.target
@@ -134,16 +137,8 @@ cat <<EOF >/etc/systemd/system/browserless.service
 Description=browserless service
 After=network.target
 [Service]
-Environment=APP_DIR=/opt/browserless
-Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/browserless
-Environment=CONNECTION_TIMEOUT=60000
-Environment=HOST=127.0.0.1
-Environment=LANG="C.UTF-8"
-Environment=NODE_ENV=production
-Environment=PORT=3000
-Environment=WORKSPACE_DIR=/opt/browserless/workspace
 WorkingDirectory=/opt/browserless
-ExecStart=/opt/browserless/start.sh
+ExecStart=/opt/browserless/scripts/start.sh
 SyslogIdentifier=browserless
 [Install]
 WantedBy=default.target
@@ -157,6 +152,6 @@ motd_ssh
 customize
 
 msg_info "Cleaning up"
-$STD apt-get autoremove
-$STD apt-get autoclean
+$STD apt-get -y autoremove
+$STD apt-get -y autoclean
 msg_ok "Cleaned"

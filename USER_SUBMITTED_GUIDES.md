@@ -7,6 +7,8 @@
 
 <sub> In order to contribute a guide on installing with Proxmox VE Helper Scripts, you should open a pull request that adds the guide to the `USER_SUBMITTED_GUIDES.md` file. </sub>
 
+[Proxmox Automation with Proxmox Helper Scripts!](https://www.youtube.com/watch?v=kcpu4z5eSEU)
+
 [Installing Home Assistant OS using Proxmox 8](https://community.home-assistant.io/t/installing-home-assistant-os-using-proxmox-8/201835)
 
 [How To Separate Zigbee2MQTT From Home Assistant In Proxmox](https://smarthomescene.com/guides/how-to-separate-zigbee2mqtt-from-home-assistant-in-proxmox/)
@@ -36,3 +38,7 @@
 [Proxmox + NetData](<https://dbt3ch.com/books/proxmox-netdata-for-better-insights-and-notifications/page/proxmox-netdata-for-better-insights-and-notifications>)
 
 [Proxmox Homelab Series](<https://blog.kye.dev/proxmox-series>)
+
+[The fastest installation of Docker and Portainer on Proxmox VE](https://lavr.site/en-fastest-install-docker-portainer-proxmox/)
+
+[How To Setup Proxmox Backuper Server Using Helper Scripts](<https://youtu.be/6C2JOsrZZZw?si=kkrrcL_nLCDBJkOB>)
